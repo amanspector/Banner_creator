@@ -2,23 +2,16 @@
 
 A tiny static banner creator implemented as a single HTML file. It's intended for quick visual mockups and small banner exports (PNG) using a 1920×1080 canvas.
 
+
 Key points
-- Single-file app: see `index.html` at the repo root — HTML, CSS and JavaScript are inline. Changes are visible immediately when opened in a browser or served locally.
+- Single-file app: see `index.html` at the repo root — HTML, CSS and JavaScript are inline.
 - Always-white canvas text: the canvas drawing code enforces white text (`ctx.fillStyle = "#fff"`) to preserve contrast over template images.
 - Dark mode: controlled by toggling `body.dark` (CSS variables in `:root` and `body.dark`) and the JS theme toggle.
 
-Quick start
-
-```bash
-# serve from repo root and open http://localhost:8000
-python3 -m http.server 8000
-```
-
-Then open your browser at http://localhost:8000 and interact with `index.html`.
+Live demo link: https://instrument-serif-banner.netlify.app/
 
 Files of interest
 - `index.html` — the whole app: UI, canvas, and client-side logic (template selection, text input, font size, position, save PNG).
-- `.github/copilot-instructions.md` — guidance for AI coding agents working on this repo.
 - `img1.jpeg`, `img2.jpeg`, `img3.jpeg`, `img4.jpeg` — example template images referenced by the page.
 
 Adding templates
