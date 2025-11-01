@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instrument Serif Banner Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #fdfdfd;
+    --text-color: #111;
+    --border-color: #ccc;
+    --button-bg: #111;
+    --button-text: #fff;
+    --canvas-text: #fff; /* Always white text */
+  }
+
+  body.dark {
+    --bg-color: #111;
+    --text-color: #eee;
+    --border-color: #444;
+    --button-bg: #eee;
+    --button-text: #111;
+  }
+
+  body {
+    font-family: "Instrument Serif", serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  h2 {
+    font-weight: 400;
+    margin-bottom: 0;
+  }
+
+  .templates {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .template-img {
+    width: 150px;
+    height: 100px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s, border 0.2s;
+  }
+
+  .template-img:hover {
+    transform: scale(1.05);
+  }
+
+  .template-img.selected {
+    border: 2px solid var(--button-bg);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--bg-color);
+    max-width: 900px;
+  }
+
+  input, select, button {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
+
+  button {
+    background: var(--button-bg);
+    color: var(--button-text);
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+
+  button:hover {
+    opacity: 0.8;
+  }
+
+  #bannerCanvas {
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    width: 960px;
+    height: auto;
+  }
+
+  @media (max-width: 1000px) {
+    #bannerCanvas {
+      width: 90%;
+    }
+  }
+
+  .font-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .font-controls label {
+    font-size: 1rem;
+  }
+
+  .font-controls input[type="number"] {
+    width: 70px;
+    text-align: center;
+  }
+
+  .font-controls button {
+    padding: 0.3rem 0.7rem;
+  }
+
+  .italic-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  /* Toast message */
+  .toast {
+    visibility: hidden;
+    min-width: 260px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s, visibility 0.5s;
+  }
+  .toast.show {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+  <h2>Instrument Serif Banner</h2>
+
+  <div class="templates">
+    <img src="img1.jpeg" class="template-img" alt="Template 1">
+    <img src="img2.jpeg" class="template-img" alt="Template 2">
+    <img src="img3.jpeg" class="template-img" alt="Template 3">
+    <img src="img4.jpeg" class="template-img" alt="Template 4">
+  </div>
+
+  <div class="controls">
+    <input type="text" id="bannerText" placeholder="Enter text :)">
+
+    <div class="font-controls">
+      <label>Font Size:</label>
+      <button id="decreaseSize">−</button>
+      <input type="number" id="fontSize" min="20" max="200" value="100">
+      <button id="increaseSize">+</button>
+
+      <label class="italic-inline">
+        <input type="checkbox" id="italicToggle"> Italic
+      </label>
+
+      <select id="position">
+        <option value="center">Center</option>
+        <option value="top">Top</option>
+        <option value="bottom">Bottom</option>
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select>
+
+      <button id="saveBtn">Save PNG</button>
+    </div>
+
+    <button id="themeToggle">🌙 Dark Mode</button>
+  </div>
+
+  <canvas id="bannerCanvas" width="1920" height="1080"></canvas>
+
+  <div id="toast" class="toast">Please select a template first</div>
+
+  <script>
+
+
+    const canvas = document.getElementById("bannerCanvas");
+    const ctx = canvas.getContext("2d");
+    const bannerText = document.getElementById("bannerText");
+    const positionSelect = document.getElementById("position");
+    const fontSizeInput = document.getElementById("fontSize");
+    const italicToggle = document.getElementById("italicToggle");
+    const saveBtn = document.getElementById("saveBtn");
+    const themeToggle = document.getElementById("themeToggle");
+    const decreaseSize = document.getElementById("decreaseSize");
+    const increaseSize = document.getElementById("increaseSize");
+    const templates = document.querySelectorAll(".template-img");
+    const toast = document.getElementById("toast");
+    const body = document.body;
+    let image = null;
+
+    
+
+    function showToast() {
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+    function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const isDarkMode = body.classList.contains("dark");
+
+  if (image) {
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  } else {
+    // ✅ Default: black in light mode, white in dark mode
+    ctx.fillStyle = isDarkMode ? "#fff" : "#000";
+    ctx.font = "italic 48px 'Instrument Serif'";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(
+      "Start by selecting a background template to begin.",
+      canvas.width / 2,
+      canvas.height / 2
+    );
+    return;
+  }
+
+  const text = bannerText.value.trim();
+  if (text) {
+    const size = fontSizeInput.value;
+    const italic = italicToggle.checked ? "italic " : "";
+    ctx.font = `${italic}${size}px 'Instrument Serif'`;
+    ctx.fillStyle = "#fff"; // Always white text
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    let x = canvas.width / 2;
+    let y = canvas.height / 2;
+
+    switch (positionSelect.value) {
+      case "top": y = canvas.height / 4; break;
+      case "bottom": y = canvas.height - 200; break;
+      case "left": x = canvas.width / 4; break;
+      case "right": x = canvas.width * 3 / 4; break;
+    }
+
+    ctx.fillText(text, x, y);
+  }
+}
+
+
+    templates.forEach(template => {
+      template.addEventListener("click", () => {
+        templates.forEach(t => t.classList.remove("selected"));
+        template.classList.add("selected");
+        const img = new Image();
+        img.onload = () => { image = img; draw(); };
+        img.src = template.src;
+      });
+    });
+
+    bannerText.addEventListener("input", () => {
+      if (!image) {
+        showToast();
+        bannerText.value = "";
+        return;
+      }
+      draw();
+    });
+
+    [positionSelect, fontSizeInput, italicToggle].forEach(el =>
+      el.addEventListener("input", draw)
+    );
+
+    decreaseSize.addEventListener("click", () => {
+      fontSizeInput.value = Math.max(20, +fontSizeInput.value - 5);
+      draw();
+    });
+
+    increaseSize.addEventListener("click", () => {
+      fontSizeInput.value = Math.min(200, +fontSizeInput.value + 5);
+      draw();
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.download = "banner.png";
+      link.href = canvas.toDataURL("image/png", 1.0);
+      link.click();
+    });
+
+    themeToggle.addEventListener("click", () => {
+      body.classList.toggle("dark");
+      themeToggle.textContent = body.classList.contains("dark")
+        ? "☀️ Light Mode"
+        : "🌙 Dark Mode";
+      draw();
+    });
+
+    window.addEventListener("resize", draw);
+  </script>
+</body>
+</html>
